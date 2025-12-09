@@ -1,0 +1,27 @@
+# =============================================================================
+# SONALYZE AGENT - Dépendances Python
+# =============================================================================
+# Ce fichier liste toutes les bibliothèques nécessaires au projet.
+# Pour installer : pip install -r requirements.txt
+# =============================================================================
+
+# --- Interface utilisateur ---
+streamlit           # Framework web pour créer l'interface rapidement
+
+# --- Traitement de données ---
+pandas              # Manipulation de données tabulaires (DataFrames)
+numpy               # Calculs numériques (moyennes, percentiles, etc.)
+
+# --- Visualisation ---
+plotly              # Graphiques interactifs (camembert, heatmap, jauge)
+matplotlib          # Graphiques statiques (pour export PDF)
+
+# --- API LLM ---
+groq                # Client pour l'API Groq (Llama, Mixtral)
+
+# --- Génération PDF ---
+reportlab           # Création de PDF professionnels
+Pillow              # Manipulation d'images (pour le PDF)
+
+# --- Utilitaires ---
+python-dotenv        # Chargement des variables d'environnement (.env)

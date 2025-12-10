@@ -321,7 +321,7 @@ FILTERING_PARAMS = {
 # =============================================================================
 
 LLM_CONFIG = {
-    "model": "llama-3.1-70b-versatile",  # Modèle Groq à utiliser
+    "model": "llama-3.3-70b-versatile",  # Modèle Groq à utiliser
     "temperature": 0.3,  # Basse = réponses plus cohérentes et factuelles
     "max_tokens": 2000,  # Limite de tokens par réponse
 }

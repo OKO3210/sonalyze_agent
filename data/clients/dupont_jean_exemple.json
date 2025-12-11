@@ -1,0 +1,58 @@
+{
+  "informations_client": {
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "email": "jean.dupont@email.com",
+    "telephone": "06 12 34 56 78"
+  },
+  "informations_logement": {
+    "nom_logement": "Appartement Pantin",
+    "adresse": "14 rue Montgolfier",
+    "code_postal": "93500",
+    "ville": "Pantin",
+    "type_logement": "Appartement",
+    "etage": "3",
+    "typologie": "T3",
+    "surface_totale_m2": "66.75"
+  },
+  "pieces": [
+    {
+      "nom": "Chambre parentale",
+      "surface_m2": "14",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Chambre enfant",
+      "surface_m2": "10",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Salon",
+      "surface_m2": "25",
+      "type": "Salon"
+    },
+    {
+      "nom": "Cuisine",
+      "surface_m2": "12",
+      "type": "Cuisine"
+    },
+    {
+      "nom": "Salle de bain",
+      "surface_m2": "5",
+      "type": "Salle de bain"
+    }
+  ],
+  "environnement_exterieur": {
+    "bruit_circulation_routiere": 4,
+    "bruit_ferroviaire": 1,
+    "bruit_aerien": 2,
+    "zones_festives_proximite": false,
+    "distance_boites_nuit_m": null
+  },
+  "metadata": {
+    "date_creation": "2024-12-10T14:30:00",
+    "date_modification": "2024-12-10T14:30:00",
+    "statut": "en_attente",
+    "fichier_json_boitier": "dps_analysis_pi3_exemple.json"
+  }
+}

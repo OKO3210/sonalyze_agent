@@ -205,3 +205,17 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# =============================================================================
+# SONALYZE - Fichiers générés
+# =============================================================================
+
+# Dossier obsolète (utiliser exports/ à la place)
+output/
+
+# Fichiers générés dans exports/ (garder la structure, pas le contenu)
+exports/rapports_pdf/*.pdf
+exports/charts_html/*.html
+
+# Ne pas ignorer les .gitkeep
+!exports/**/.gitkeep

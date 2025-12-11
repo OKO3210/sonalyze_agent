@@ -1,0 +1,40 @@
+{
+  "informations_client": {
+    "nom": "koko",
+    "prenom": "koko2",
+    "email": "koko@gmail.Com",
+    "telephone": "0768516259"
+  },
+  "informations_logement": {
+    "nom_logement": "Apparetement en bord de mer",
+    "adresse": "1 rue de la joconde",
+    "code_postal": "75001",
+    "ville": "Paris",
+    "type_logement": "Appartement",
+    "etage": "4",
+    "typologie": "T4",
+    "surface_totale_m2": 65
+  },
+  "pieces": [
+    {
+      "nom": "Chambre",
+      "type": "Bureau",
+      "surface_m2": 58
+    }
+  ],
+  "environnement_exterieur": {
+    "bruit_circulation_routiere": 1,
+    "bruit_ferroviaire": 3,
+    "bruit_aerien": 2,
+    "zones_festives_proximite": false,
+    "distance_boites_nuit_m": null
+  },
+  "commentaires": "Circulation de nuit",
+  "metadata": {
+    "date_creation": "2025-12-11T21:00:43.522Z",
+    "date_modification": "2025-12-11T22:00:58.198165",
+    "statut": "en_attente",
+    "fichier_json_boitier": "",
+    "source": "formulaire_client"
+  }
+}

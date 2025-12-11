@@ -1,0 +1,63 @@
+{
+  "informations_client": {
+    "nom": "Martin",
+    "prenom": "Sophie",
+    "email": "sophie.martin@gmail.com",
+    "telephone": "07 98 76 54 32"
+  },
+  "informations_logement": {
+    "nom_logement": "Maison Créteil",
+    "adresse": "8 avenue de la République",
+    "code_postal": "94000",
+    "ville": "Créteil",
+    "type_logement": "Maison",
+    "etage": "",
+    "typologie": "T4",
+    "surface_totale_m2": "95"
+  },
+  "pieces": [
+    {
+      "nom": "Chambre 1",
+      "surface_m2": "16",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Chambre 2",
+      "surface_m2": "12",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Chambre 3",
+      "surface_m2": "10",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Séjour",
+      "surface_m2": "32",
+      "type": "Salon"
+    },
+    {
+      "nom": "Cuisine",
+      "surface_m2": "15",
+      "type": "Cuisine"
+    },
+    {
+      "nom": "Bureau",
+      "surface_m2": "8",
+      "type": "Bureau"
+    }
+  ],
+  "environnement_exterieur": {
+    "bruit_circulation_routiere": 2,
+    "bruit_ferroviaire": 0,
+    "bruit_aerien": 3,
+    "zones_festives_proximite": true,
+    "distance_boites_nuit_m": 500
+  },
+  "metadata": {
+    "date_creation": "2024-12-09T10:15:00",
+    "date_modification": "2024-12-10T09:00:00",
+    "statut": "termine",
+    "fichier_json_boitier": ""
+  }
+}

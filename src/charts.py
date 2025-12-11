@@ -11,16 +11,25 @@ Génère tous les graphiques nécessaires au rapport DPS :
 
 Utilise Plotly pour les graphiques interactifs (Streamlit)
 et peut exporter en image pour le PDF.
+
+Auteur: Équipe Patria
+Date: Décembre 2024
 =============================================================================
 """
 
-import plotly.graph_objects as go
-import plotly.express as px
+from typing import Any, Dict, List
+
 import pandas as pd
-from typing import Dict, List, Any
+import plotly.express as px
+import plotly.graph_objects as go
 
-from src.config import DPS_SCALE
+# Import local (même dossier src/)
+from config import DPS_SCALE, get_note_from_db, is_sound_problematic
 
+
+# =============================================================================
+# JAUGE DE PERFORMANCE
+# =============================================================================
 
 def create_dps_gauge(db_mean: float, note: str) -> go.Figure:
     """
@@ -88,6 +97,10 @@ def create_dps_gauge(db_mean: float, note: str) -> go.Figure:
     return fig
 
 
+# =============================================================================
+# DISTRIBUTION DES NOTES
+# =============================================================================
+
 def create_rating_bars(distribution: Dict[str, int]) -> go.Figure:
     """
     Crée un graphique en barres horizontales de la distribution des notes.
@@ -117,7 +130,10 @@ def create_rating_bars(distribution: Dict[str, int]) -> go.Figure:
             marker_color=colors,
             text=[f"{p}%" for p in percentages],
             textposition="auto",
-            hovertemplate="<b>Note %{y}</b><br>%{x} segments (%{text})<br>%{customdata}<extra></extra>",
+            hovertemplate=(
+                "<b>Note %{y}</b><br>%{x} segments (%{text})<br>"
+                "%{customdata}<extra></extra>"
+            ),
             customdata=labels,
         )
     )
@@ -134,34 +150,103 @@ def create_rating_bars(distribution: Dict[str, int]) -> go.Figure:
     return fig
 
 
-def create_family_pie(families: Dict[str, int]) -> go.Figure:
+# =============================================================================
+# CAMEMBERT DES FAMILLES DE SONS
+# =============================================================================
+
+# Couleurs harmonieuses par famille (palette moderne)
+FAMILY_COLORS = {
+    "circulation": "#E74C3C",    # Rouge corail
+    "transport": "#E67E22",      # Orange
+    "voisinage": "#3498DB",      # Bleu
+    "musique": "#9B59B6",        # Violet
+    "interieur": "#1ABC9C",      # Turquoise
+    "electromenager": "#F39C12", # Jaune doré
+    "nature": "#27AE60",         # Vert
+    "travaux": "#E74C3C",        # Rouge
+    "alertes": "#C0392B",        # Rouge foncé
+    "animaux": "#8E44AD",        # Violet foncé
+    "autres": "#95A5A6",         # Gris
+}
+
+
+def create_family_pie(
+    families_data: Dict, 
+    title: str = "Typologie des bruits détectés", 
+    with_notes: bool = False
+) -> go.Figure:
     """
     Crée le camembert de répartition par famille de sons.
 
     Args:
-        families: {"circulation": 4500, "voisinage": 2000, ...}
+        families_data: Soit {"circulation": 4500, ...} 
+                       soit {"circulation": {"count": 450, "percentage": 65, "note": "D"}, ...}
+        title: Titre du graphique
+        with_notes: Si True, les données contiennent des notes
 
     Returns:
         Figure Plotly
     """
-    # Couleurs par famille
-    family_colors = {
-        "circulation": "#FF6B6B",
-        "transport": "#FF8E72",
-        "voisinage": "#4ECDC4",
-        "musique": "#45B7D1",
-        "interieur": "#96CEB4",
-        "electromenager": "#FFEAA7",
-        "nature": "#81C784",
-        "travaux": "#FFB74D",
-        "alertes": "#E57373",
-        "animaux": "#BA68C8",
-        "autres": "#90A4AE",
-    }
+    # Gestion des données vides
+    if not families_data:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune donnée disponible",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(title=title, height=350)
+        return fig
 
-    labels = list(families.keys())
-    values = list(families.values())
-    colors = [family_colors.get(f, "#90A4AE") for f in labels]
+    # Détermine le type de données
+    first_value = list(families_data.values())[0]
+    is_dict_format = isinstance(first_value, dict)
+
+    if with_notes and is_dict_format:
+        # Format avec notes: {"circulation": {"count": 450, ...}}
+        labels = [
+            f"{fam} ({data.get('note', '?')})" 
+            for fam, data in families_data.items()
+        ]
+        values = [
+            data.get("count", data.get("percentage", 0)) 
+            for data in families_data.values()
+        ]
+        db_values = [data.get("avg_db", 0) for data in families_data.values()]
+        colors = [
+            FAMILY_COLORS.get(fam, "#95A5A6") 
+            for fam in families_data.keys()
+        ]
+        hover_template = (
+            "<b>%{label}</b><br>%{percent}<br>"
+            "%{customdata:.1f} dB<extra></extra>"
+        )
+        customdata = db_values
+    else:
+        # Format simple: {"circulation": 4500, ...}
+        labels = list(families_data.keys())
+        values = list(families_data.values())
+        colors = [FAMILY_COLORS.get(f, "#95A5A6") for f in families_data.keys()]
+        hover_template = (
+            "<b>%{label}</b><br>%{value} segments<br>"
+            "%{percent}<extra></extra>"
+        )
+        customdata = None
+
+    # Vérifie qu'il y a des valeurs > 0
+    if not any(v > 0 for v in values):
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune donnée disponible",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(title=title, height=350)
+        return fig
 
     fig = go.Figure(
         go.Pie(
@@ -171,18 +256,47 @@ def create_family_pie(families: Dict[str, int]) -> go.Figure:
             textinfo="label+percent",
             textposition="inside",
             hole=0.3,
-            hovertemplate="<b>%{label}</b><br>%{value} segments<br>%{percent}<extra></extra>",
+            hovertemplate=hover_template,
+            customdata=customdata,
         )
     )
 
     fig.update_layout(
-        title="Typologie des bruits détectés",
-        height=400,
+        title=title,
+        height=350,
         margin=dict(l=20, r=20, t=50, b=20),
     )
 
     return fig
 
+
+def create_family_pie_day_night(
+    families_jour: Dict, 
+    families_nuit: Dict
+) -> Dict[str, go.Figure]:
+    """
+    Crée deux camemberts séparés pour jour et nuit avec les notes.
+
+    Returns:
+        {"jour": Figure, "nuit": Figure}
+    """
+    return {
+        "jour": create_family_pie(
+            families_jour, 
+            "☀️ Familles de sons - JOUR (7h-22h)", 
+            with_notes=True
+        ),
+        "nuit": create_family_pie(
+            families_nuit, 
+            "🌙 Familles de sons - NUIT (22h-7h)", 
+            with_notes=True
+        )
+    }
+
+
+# =============================================================================
+# COMPARAISON JOUR / NUIT
+# =============================================================================
 
 def create_day_night_comparison(day_night: Dict) -> go.Figure:
     """
@@ -195,15 +309,19 @@ def create_day_night_comparison(day_night: Dict) -> go.Figure:
         Figure Plotly
     """
     categories = ["Moyen", "Min", "Max"]
+    
+    jour_data = day_night.get("jour", {})
+    nuit_data = day_night.get("nuit", {})
+    
     jour_values = [
-        day_night["jour"]["mean"],
-        day_night["jour"]["min"],
-        day_night["jour"]["max"],
+        jour_data.get("mean", 0) or 0,
+        jour_data.get("min", 0) or 0,
+        jour_data.get("max", 0) or 0,
     ]
     nuit_values = [
-        day_night["nuit"]["mean"],
-        day_night["nuit"]["min"],
-        day_night["nuit"]["max"],
+        nuit_data.get("mean", 0) or 0,
+        nuit_data.get("min", 0) or 0,
+        nuit_data.get("max", 0) or 0,
     ]
 
     fig = go.Figure()
@@ -214,7 +332,7 @@ def create_day_night_comparison(day_night: Dict) -> go.Figure:
             x=categories,
             y=jour_values,
             marker_color="#FFC107",
-            text=[f"{v} dB" for v in jour_values],
+            text=[f"{v:.1f} dB" for v in jour_values],
             textposition="auto",
         )
     )
@@ -225,7 +343,7 @@ def create_day_night_comparison(day_night: Dict) -> go.Figure:
             x=categories,
             y=nuit_values,
             marker_color="#3F51B5",
-            text=[f"{v} dB" for v in nuit_values],
+            text=[f"{v:.1f} dB" for v in nuit_values],
             textposition="auto",
         )
     )
@@ -242,6 +360,10 @@ def create_day_night_comparison(day_night: Dict) -> go.Figure:
     return fig
 
 
+# =============================================================================
+# HEATMAPS
+# =============================================================================
+
 def create_hourly_heatmap(hourly_data: List[Dict]) -> go.Figure:
     """
     Crée la heatmap des niveaux sonores par heure.
@@ -252,6 +374,18 @@ def create_hourly_heatmap(hourly_data: List[Dict]) -> go.Figure:
     Returns:
         Figure Plotly
     """
+    if not hourly_data:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune donnée disponible",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(title="Niveau sonore moyen par heure", height=200)
+        return fig
+
     df = pd.DataFrame(hourly_data)
 
     # Crée une matrice simple (1 ligne, 24 colonnes)
@@ -298,23 +432,40 @@ def create_hourly_heatmap(hourly_data: List[Dict]) -> go.Figure:
     return fig
 
 
-def create_sounds_heatmap(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
+def create_sounds_heatmap(df: pd.DataFrame, top_n: int = 10) -> go.Figure:
     """
-    Crée la heatmap complète : Sons × Heures.
+    Crée la heatmap complète : Sons × Heures avec note moyenne par son.
 
     Args:
         df: DataFrame avec les données
-        top_n: Nombre de sons à afficher
+        top_n: Nombre de sons à afficher (défaut: 10)
 
     Returns:
         Figure Plotly
     """
+    if df is None or len(df) == 0:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune donnée disponible",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(title="Répartition des sons sur 24h", height=450)
+        return fig
+
     # Récupère les top N sons
     top_sounds = df["top_label"].value_counts().head(top_n).index.tolist()
 
-    # Filtre et pivote
-    df_filtered = df[df["top_label"].isin(top_sounds)]
+    # Filtre
+    df_filtered = df[df["top_label"].isin(top_sounds)].copy()
 
+    # Calcule la note moyenne par son
+    sound_stats = df_filtered.groupby("top_label")["LAeq_segment_dB"].mean()
+    sound_notes = {label: get_note_from_db(db) for label, db in sound_stats.items()}
+
+    # Pivot pour la heatmap
     pivot = pd.pivot_table(
         df_filtered,
         values="LAeq_segment_dB",
@@ -329,43 +480,105 @@ def create_sounds_heatmap(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
     pivot = pivot.sort_values("total", ascending=True)
     pivot = pivot.drop("total", axis=1)
 
+    # Labels avec notes et indicateur problématique
+    y_labels = []
+    for label in pivot.index:
+        note = sound_notes.get(label, "?")
+        indicator = "🔴" if is_sound_problematic(label) else ""
+        y_labels.append(f"{indicator} {label} ({note})")
+
     fig = go.Figure(
         go.Heatmap(
             z=pivot.values,
             x=[f"{h}h" for h in pivot.columns],
-            y=pivot.index,
-            colorscale="YlOrRd",
-            hovertemplate="<b>%{y}</b><br>Heure: %{x}<br>Occurrences: %{z}<extra></extra>",
+            y=y_labels,
+            colorscale=[
+                [0, "#E8F5E9"],
+                [0.3, "#FFF9C4"],
+                [0.6, "#FFCC80"],
+                [1, "#EF5350"]
+            ],
+            hovertemplate=(
+                "<b>%{y}</b><br>Heure: %{x}<br>"
+                "Occurrences: %{z}<extra></extra>"
+            ),
         )
     )
 
+    # Zones nuit
+    fig.add_vrect(
+        x0=-0.5, x1=6.5,
+        fillcolor="rgba(63, 81, 181, 0.15)",
+        line_width=0,
+        annotation_text="🌙 Nuit",
+        annotation_position="top left"
+    )
+    fig.add_vrect(
+        x0=21.5, x1=23.5,
+        fillcolor="rgba(63, 81, 181, 0.15)",
+        line_width=0,
+        annotation_text="🌙 Nuit",
+        annotation_position="top right"
+    )
+
     fig.update_layout(
-        title=f"Répartition des {top_n} sons principaux sur 24h",
+        title=f"Répartition des {top_n} sons sur 24h (🔴 = problématique)",
         xaxis_title="Heure",
-        yaxis_title="Type de son",
-        height=500,
-        margin=dict(l=150, r=20, t=50, b=40),
+        yaxis_title="",
+        height=450,
+        margin=dict(l=200, r=20, t=50, b=40),
     )
 
     return fig
 
 
-def create_top_sounds_bar(top_sounds: List[Dict], top_n: int = 10) -> go.Figure:
+# =============================================================================
+# TOP SONS (BARRES)
+# =============================================================================
+
+def create_top_sounds_bar(
+    top_sounds: List[Dict], 
+    top_n: int = 5, 
+    title: str = "Top 5 sons détectés"
+) -> go.Figure:
     """
-    Crée le graphique en barres des sons les plus fréquents.
+    Crée le graphique en barres des sons les plus fréquents avec leur note DPS.
 
     Args:
-        top_sounds: Liste de dicts avec label, percentage, family, is_problematic
+        top_sounds: Liste de dicts avec label, percentage, family, 
+                    is_problematic, avg_db, note
         top_n: Nombre de sons à afficher
+        title: Titre du graphique
 
     Returns:
         Figure Plotly
     """
+    # Gestion des données vides
+    if not top_sounds:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune donnée disponible",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(title=title, height=300)
+        return fig
+
     sounds = top_sounds[:top_n]
 
-    labels = [s["label"] for s in sounds]
+    labels = [f"{s['label']} ({s.get('note', '?')})" for s in sounds]
     values = [s["percentage"] for s in sounds]
-    colors = ["#FF6B6B" if s["is_problematic"] else "#4ECDC4" for s in sounds]
+    db_values = [s.get("avg_db", 0) for s in sounds]
+    notes = [s.get("note", "?") for s in sounds]
+    
+    # Couleur selon la note
+    note_colors = {
+        "A": "#00A651", "B": "#92D050", "C": "#FFFF00", 
+        "D": "#FFC000", "E": "#FF6600", "F": "#FF0000", "G": "#C00000"
+    }
+    colors = [note_colors.get(n, "#90A4AE") for n in notes]
 
     fig = go.Figure(
         go.Bar(
@@ -373,36 +586,55 @@ def create_top_sounds_bar(top_sounds: List[Dict], top_n: int = 10) -> go.Figure:
             y=labels,
             orientation="h",
             marker_color=colors,
-            text=[f"{v}%" for v in values],
+            text=[f"{v}% | {db:.0f}dB" for v, db in zip(values, db_values)],
             textposition="auto",
-            hovertemplate="<b>%{y}</b><br>%{x}% du temps<extra></extra>",
+            hovertemplate=(
+                "<b>%{y}</b><br>%{x}% du temps<br>"
+                "Note: %{customdata}<extra></extra>"
+            ),
+            customdata=notes,
         )
     )
 
     fig.update_layout(
-        title="Top 10 des sons détectés",
+        title=title,
         xaxis_title="Pourcentage du temps",
         yaxis_title="",
-        height=400,
-        margin=dict(l=150, r=20, t=50, b=40),
+        height=300,
+        margin=dict(l=180, r=20, t=50, b=40),
         yaxis=dict(categoryorder="total ascending"),
-    )
-
-    # Ajoute une légende pour les couleurs
-    fig.add_annotation(
-        x=0.95,
-        y=0.05,
-        xref="paper",
-        yref="paper",
-        text="🔴 Problématique | 🟢 Normal",
-        showarrow=False,
-        font=dict(size=10),
     )
 
     return fig
 
 
-def generate_all_charts(analysis: Dict, df: pd.DataFrame) -> Dict[str, go.Figure]:
+def create_top_sounds_day_night(
+    sounds_jour: List[Dict], 
+    sounds_nuit: List[Dict]
+) -> Dict[str, go.Figure]:
+    """
+    Crée deux graphiques séparés pour jour et nuit.
+
+    Returns:
+        {"jour": Figure, "nuit": Figure}
+    """
+    return {
+        "jour": create_top_sounds_bar(
+            sounds_jour, 5, 
+            "☀️ Top 5 Sons - JOUR (7h-22h)"
+        ),
+        "nuit": create_top_sounds_bar(
+            sounds_nuit, 5, 
+            "🌙 Top 5 Sons - NUIT (22h-7h)"
+        )
+    }
+
+
+# =============================================================================
+# FONCTION PRINCIPALE
+# =============================================================================
+
+def generate_all_charts(analysis: Dict, df: pd.DataFrame) -> Dict[str, Any]:
     """
     Génère tous les graphiques en un seul appel.
 
@@ -412,17 +644,58 @@ def generate_all_charts(analysis: Dict, df: pd.DataFrame) -> Dict[str, go.Figure
 
     Returns:
         Dictionnaire avec tous les graphiques Plotly
+        Les clés *_jour et *_nuit contiennent les versions jour/nuit
     """
+    sounds_data = analysis.get("sounds", {})
+    
+    # Graphiques jour/nuit
+    top_sounds_day_night = create_top_sounds_day_night(
+        sounds_data.get("top_5_jour", []),
+        sounds_data.get("top_5_nuit", [])
+    )
+    family_pie_day_night = create_family_pie_day_night(
+        sounds_data.get("families_jour", {}),
+        sounds_data.get("families_nuit", {})
+    )
+    
+    global_stats = analysis.get("global", {})
+    
     return {
+        # Graphique principal
         "gauge": create_dps_gauge(
-            analysis["global"]["db_mean"], analysis["global"]["note_globale"]
+            global_stats.get("db_mean", 45), 
+            global_stats.get("note_globale", "D")
         ),
-        "rating_bars": create_rating_bars(analysis["ratings"]["distribution"]),
-        "family_pie": create_family_pie(analysis["sounds"]["families"]),
-        "day_night": create_day_night_comparison(analysis["day_night"]),
-        "hourly_heatmap": create_hourly_heatmap(analysis["hourly"]),
-        "sounds_heatmap": create_sounds_heatmap(df),
-        "top_sounds": create_top_sounds_bar(analysis["sounds"]["top_20"]),
+        # Distribution des notes
+        "rating_bars": create_rating_bars(
+            analysis.get("ratings", {}).get("distribution", {})
+        ),
+        # Comparaison jour/nuit
+        "day_night": create_day_night_comparison(
+            analysis.get("day_night", {})
+        ),
+        # Heatmap avec notes
+        "sounds_heatmap": create_sounds_heatmap(df, top_n=10),
+        # Heatmap horaire
+        "hourly_heatmap": create_hourly_heatmap(
+            analysis.get("hourly", [])
+        ),
+        
+        # === GRAPHIQUES JOUR/NUIT ===
+        "top_sounds_jour": top_sounds_day_night["jour"],
+        "top_sounds_nuit": top_sounds_day_night["nuit"],
+        "family_pie_jour": family_pie_day_night["jour"],
+        "family_pie_nuit": family_pie_day_night["nuit"],
+        
+        # === GRAPHIQUES GLOBAUX (pour compatibilité) ===
+        "top_sounds": create_top_sounds_bar(
+            sounds_data.get("top_5", []), 
+            5, 
+            "Top 5 sons détectés (global)"
+        ),
+        "family_pie": create_family_pie(
+            sounds_data.get("families", {})
+        ),
     }
 
 
@@ -431,15 +704,25 @@ def generate_all_charts(analysis: Dict, df: pd.DataFrame) -> Dict[str, go.Figure
 # =============================================================================
 
 if __name__ == "__main__":
-    from src.data_loader import DataLoader
-    from src.aggregator import generate_full_analysis
+    import os
+    from pathlib import Path
+    
+    from data_loader import DataLoader
+    from aggregator import generate_full_analysis
 
     print("\n" + "=" * 60)
     print("TEST CHARTS")
     print("=" * 60 + "\n")
 
+    # Chemin relatif depuis src/
+    data_path = Path(__file__).parent.parent / "data" / "dps_analysis_pi3_exemple.json"
+    exports_path = Path(__file__).parent.parent / "exports" / "charts_html"
+    
+    # Crée le dossier exports si nécessaire
+    exports_path.mkdir(parents=True, exist_ok=True)
+
     # Charge les données
-    loader = DataLoader("data/dps_analysis_pi3_exemple.json")
+    loader = DataLoader(str(data_path))
     df = loader.load()
 
     # Génère l'analyse
@@ -452,12 +735,12 @@ if __name__ == "__main__":
     for name in charts.keys():
         print(f"   - {name}")
 
-    # Sauvegarde un exemple en HTML pour vérifier
+    # Sauvegarde en HTML
     print("\n📊 Sauvegarde des graphiques en HTML...")
 
     for name, fig in charts.items():
-        filepath = f"output/chart_{name}.html"
-        fig.write_html(filepath)
+        filepath = exports_path / f"chart_{name}.html"
+        fig.write_html(str(filepath))
         print(f"   ✅ {filepath}")
 
-    print("\n🎉 Ouvre les fichiers HTML dans ton navigateur pour voir les graphiques !")
+    print("\n🎉 Ouvre les fichiers HTML dans ton navigateur !")

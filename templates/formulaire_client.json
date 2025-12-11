@@ -1,0 +1,55 @@
+{
+  "informations_client": {
+    "nom": "",
+    "prenom": "",
+    "email": "",
+    "telephone": ""
+  },
+  "informations_logement": {
+    "nom_logement": "",
+    "adresse": "",
+    "code_postal": "",
+    "ville": "",
+    "type_logement": "",
+    "etage": "",
+    "typologie": "",
+    "surface_totale_m2": ""
+  },
+  "pieces": [
+    {
+      "nom": "Chambre principale",
+      "surface_m2": "",
+      "type": "Chambre"
+    },
+    {
+      "nom": "Salon",
+      "surface_m2": "",
+      "type": "Salon"
+    },
+    {
+      "nom": "Cuisine",
+      "surface_m2": "",
+      "type": "Cuisine"
+    }
+  ],
+  "environnement_exterieur": {
+    "bruit_circulation_routiere": 0,
+    "bruit_ferroviaire": 0,
+    "bruit_aerien": 0,
+    "zones_festives_proximite": false,
+    "distance_boites_nuit_m": null
+  },
+  "metadata": {
+    "date_creation": "",
+    "date_modification": "",
+    "statut": "en_attente",
+    "fichier_json_boitier": ""
+  },
+  "_instructions": {
+    "informations_client": "Remplissez vos coordonnées pour que nous puissions vous recontacter",
+    "informations_logement": "Décrivez votre logement (type_logement: Appartement ou Maison, typologie: Studio/T1/T2/T3/T4/T5/T6+)",
+    "pieces": "Listez toutes les pièces où vous souhaitez un diagnostic (types: Chambre, Salon, Cuisine, Salle de bain, Toilettes, Couloir, Bureau, Salle à manger, Cave, Garage, Autre)",
+    "environnement_exterieur": "Évaluez le bruit extérieur de 0 (aucun) à 5 (très fort)",
+    "note": "Ce formulaire sera traité par Sonalyze pour générer votre diagnostic de performance sonore"
+  }
+}

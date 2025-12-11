@@ -1,0 +1,40 @@
+{
+  "informations_client": {
+    "nom": "test",
+    "prenom": "test",
+    "email": "test@test.test",
+    "telephone": "0758585858"
+  },
+  "informations_logement": {
+    "nom_logement": "Appartement",
+    "adresse": "1 rue du test",
+    "code_postal": "75001",
+    "ville": "Paris",
+    "type_logement": "Appartement",
+    "etage": "3",
+    "typologie": "T2",
+    "surface_totale_m2": 65
+  },
+  "pieces": [
+    {
+      "nom": "chambre parentale",
+      "type": "Chambre",
+      "surface_m2": 40
+    }
+  ],
+  "environnement_exterieur": {
+    "bruit_circulation_routiere": 1,
+    "bruit_ferroviaire": 2,
+    "bruit_aerien": 1,
+    "zones_festives_proximite": false,
+    "distance_boites_nuit_m": null
+  },
+  "commentaires": "Rien a dire c'est pas ouf",
+  "metadata": {
+    "date_creation": "2025-12-11T10:45:15.313Z",
+    "date_modification": "2025-12-11T15:34:27.911228",
+    "statut": "analyse_en_cours",
+    "fichier_json_boitier": "dps_analysis_pi3_exemple.json",
+    "source": "formulaire_client"
+  }
+}
